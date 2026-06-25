@@ -55,6 +55,7 @@ const HEADER_HOOKS = {
       if (titleKey !== lcKey && h[titleKey] !== undefined) delete h[titleKey];
     }
     Object.assign(h, cached);
+    ensureAnthropicVersion(h);
   },
 };
 
@@ -202,6 +203,16 @@ export class DefaultExecutor extends BaseExecutor {
     }
 
     if (stream) headers["Accept"] = "text/event-stream";
+
+    if (
+      this.config?.format === "claude"
+      || this.provider?.startsWith?.("anthropic-compatible-")
+      || headers["anthropic-version"]
+      || headers["Anthropic-Version"]
+    ) {
+      ensureAnthropicVersion(headers);
+    }
+
     return headers;
   }
 

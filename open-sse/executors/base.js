@@ -125,6 +125,9 @@ export class BaseExecutor {
       const url = this.buildUrl(model, stream, urlIndex, credentials);
       const transformedBody = this.transformRequest(model, body, stream, credentials);
       const headers = this.buildHeaders(credentials, stream);
+      try {
+        if (new URL(url).hostname.includes("anthropic.com")) ensureAnthropicVersion(headers);
+      } catch { /* ignore bad url */ }
 
       if (!retryAttemptsByUrl[urlIndex]) retryAttemptsByUrl[urlIndex] = 0;
 
