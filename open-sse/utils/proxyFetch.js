@@ -1,23 +1,6 @@
 import { Readable } from "stream";
 import { MEMORY_CONFIG } from "../config/runtimeConfig.js";
-import { ensureAnthropicVersion } from "../providers/shared.js";
 import { dbg } from "./debugLog.js";
-
-function normalizeAnthropicRequestHeaders(url, options = {}) {
-  let hostname;
-  try {
-    hostname = new URL(typeof url === "string" ? url : url.toString()).hostname;
-  } catch {
-    return options;
-  }
-  if (!hostname.includes("anthropic.com") || !options.headers) return options;
-
-  const headers = options.headers instanceof Headers
-    ? Object.fromEntries(options.headers.entries())
-    : { ...options.headers };
-  ensureAnthropicVersion(headers);
-  return { ...options, headers };
-}
 
 const originalFetch = globalThis.fetch;
 const proxyDispatchers = new Map();
@@ -309,7 +292,6 @@ async function createBypassRequest(parsedUrl, realIP, options) {
 }
 
 export async function proxyAwareFetch(url, options = {}, proxyOptions = null) {
-  options = normalizeAnthropicRequestHeaders(url, options);
   const targetUrl = typeof url === "string" ? url : url.toString();
 
   // Vercel relay: forward request via relay headers

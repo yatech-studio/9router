@@ -1,6 +1,6 @@
 import { BaseExecutor } from "./base.js";
 import { PROVIDERS, PROVIDER_OAUTH } from "../config/providers.js";
-import { ANTHROPIC_API_VERSION, ensureAnthropicVersion, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE } from "../providers/shared.js";
+import { ANTHROPIC_API_VERSION, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE } from "../providers/shared.js";
 import { OAUTH_ENDPOINTS, buildKimiHeaders } from "../config/appConstants.js";
 import { buildClineHeaders } from "../shared/clineAuth.js";
 import { getCachedClaudeHeaders } from "../utils/claudeHeaderCache.js";
@@ -27,13 +27,13 @@ function applyAuth(headers, desc, credentials) {
   if (desc.combined) {
     // combined providers always set the header (legacy behavior, incl. noAuth → "Bearer undefined")
     setAuth(headers, desc, credentials.apiKey || credentials.accessToken);
-    if (desc.anthropicVersion) ensureAnthropicVersion(headers);
+    if (desc.anthropicVersion && !headers["anthropic-version"]) headers["anthropic-version"] = ANTHROPIC_API_VERSION;
     return;
   }
   // split apiKey/oauth: set only the matching branch (legacy: anthropic-compatible skips when both absent)
   if (credentials.apiKey) setAuth(headers, desc.apiKey, credentials.apiKey);
   else if (credentials.accessToken) setAuth(headers, desc.oauth, credentials.accessToken);
-  if (desc.anthropicVersion) ensureAnthropicVersion(headers);
+  if (desc.anthropicVersion && !headers["anthropic-version"]) headers["anthropic-version"] = ANTHROPIC_API_VERSION;
 }
 
 // Provider-specific header quirks kept as small hooks (not pure auth).
@@ -55,7 +55,6 @@ const HEADER_HOOKS = {
       if (titleKey !== lcKey && h[titleKey] !== undefined) delete h[titleKey];
     }
     Object.assign(h, cached);
-    ensureAnthropicVersion(h);
   },
 };
 
@@ -203,16 +202,6 @@ export class DefaultExecutor extends BaseExecutor {
     }
 
     if (stream) headers["Accept"] = "text/event-stream";
-
-    if (
-      this.config?.format === "claude"
-      || this.provider?.startsWith?.("anthropic-compatible-")
-      || headers["anthropic-version"]
-      || headers["Anthropic-Version"]
-    ) {
-      ensureAnthropicVersion(headers);
-    }
-
     return headers;
   }
 

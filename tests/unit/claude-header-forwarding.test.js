@@ -228,35 +228,6 @@ describe("DefaultExecutor.buildHeaders() — claude provider cold start (no cach
   });
 });
 
-describe("ensureAnthropicVersion", () => {
-  it("collapses comma-merged duplicate values from fetch", async () => {
-    const { ensureAnthropicVersion } = await import("open-sse/providers/shared.js");
-    const headers = { "anthropic-version": "2023-06-01, 2023-06-01" };
-    ensureAnthropicVersion(headers);
-    expect(headers["anthropic-version"]).toBe("2023-06-01");
-    expect(new Headers(headers).get("anthropic-version")).toBe("2023-06-01");
-  });
-});
-
-describe("DefaultExecutor.buildHeaders() — anthropic provider", () => {
-  let DefaultExecutor;
-
-  beforeEach(async () => {
-    vi.resetModules();
-    const mod = await import("open-sse/executors/default.js");
-    DefaultExecutor = mod.DefaultExecutor || mod.default;
-  });
-
-  it("does not emit both Anthropic-Version and anthropic-version", () => {
-    const executor = new DefaultExecutor("anthropic");
-    const headers = executor.buildHeaders({ apiKey: "sk-test" }, true);
-
-    expect(headers["Anthropic-Version"]).toBeUndefined();
-    expect(headers["anthropic-version"]).toBe("2023-06-01");
-    expect(new Headers(headers).get("anthropic-version")).toBe("2023-06-01");
-  });
-});
-
 // ─── anthropic-compatible header stripping ────────────────────────────────────
 
 describe("DefaultExecutor.buildHeaders() — anthropic-compatible stripping", () => {

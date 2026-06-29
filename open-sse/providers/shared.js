@@ -23,18 +23,9 @@ export function mapStainlessArch() {
 // Anthropic API version (single source — reused across claude-format providers/executors)
 export const ANTHROPIC_API_VERSION = "2023-06-01";
 
-/** Collapse Anthropic-Version / anthropic-version to a single lowercase header (fetch merges both → invalid duplicate). */
-export function ensureAnthropicVersion(headers) {
-  const raw = headers["anthropic-version"] || headers["Anthropic-Version"];
-  delete headers["Anthropic-Version"];
-  delete headers["anthropic-version"];
-  const version = raw?.split(",")[0]?.trim() || ANTHROPIC_API_VERSION;
-  headers["anthropic-version"] = version;
-}
-
 // Shared Claude-compatible API headers (reused across claude-format providers)
 export const CLAUDE_API_HEADERS = {
-  "anthropic-version": ANTHROPIC_API_VERSION,
+  "Anthropic-Version": ANTHROPIC_API_VERSION,
   "Anthropic-Beta": "claude-code-20250219,interleaved-thinking-2025-05-14"
 };
 
