@@ -2,7 +2,7 @@ import { HTTP_STATUS, RETRY_CONFIG, DEFAULT_RETRY_CONFIG, resolveRetryEntry, FET
 import { shouldRefreshCredentials } from "../services/oauthCredentialManager.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { dbg } from "../utils/debugLog.js";
-import { ANTHROPIC_API_VERSION, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE } from "../providers/shared.js";
+import { ensureAnthropicVersion, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE } from "../providers/shared.js";
 
 /**
  * BaseExecutor - Base class for provider executors
@@ -55,9 +55,7 @@ export class BaseExecutor {
       } else if (credentials.accessToken) {
         headers["Authorization"] = `Bearer ${credentials.accessToken}`;
       }
-      if (!headers["anthropic-version"]) {
-        headers["anthropic-version"] = ANTHROPIC_API_VERSION;
-      }
+      ensureAnthropicVersion(headers);
     } else {
       // Standard Bearer token auth for other providers
       if (credentials.accessToken) {
@@ -127,6 +125,9 @@ export class BaseExecutor {
       const url = this.buildUrl(model, stream, urlIndex, credentials);
       const transformedBody = this.transformRequest(model, body, stream, credentials);
       const headers = this.buildHeaders(credentials, stream);
+      try {
+        if (new URL(url).hostname.includes("anthropic.com")) ensureAnthropicVersion(headers);
+      } catch { /* ignore bad url */ }
 
       if (!retryAttemptsByUrl[urlIndex]) retryAttemptsByUrl[urlIndex] = 0;
 
